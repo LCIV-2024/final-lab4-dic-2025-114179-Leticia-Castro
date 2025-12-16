@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +26,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @ExtendWith(MockitoExtension.class)
 class GameServiceTest {
@@ -55,7 +59,33 @@ class GameServiceTest {
 
     @Test
     void testStartGame_Success() {
-        // TODO: Implementar el test para testStartGame_Success
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(wordRepository.findRandomWord()).thenReturn(Optional.of(word));
+        when(gameInProgressRepository.findByJugadorAndPalabra(1L, 1L))
+                .thenReturn(Optional.empty());
+
+        when(gameInProgressRepository.save(any(GameInProgress.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(wordRepository.save(any(Word.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        GameResponseDTO response = gameService.startGame(1L);
+
+        // Then
+        assertNotNull(response);
+        assertEquals("___________", response.getPalabraOculta());
+        assertEquals(7, response.getIntentosRestantes());
+        assertFalse(response.getPalabraCompleta());
+
+        assertEquals(0, response.getPuntajeAcumulado());
+        assertTrue(response.getLetrasIntentadas().isEmpty());
+
+        verify(playerRepository, times(1)).findById(1L);
+        verify(wordRepository, times(1)).findRandomWord();
+        verify(wordRepository, times(1)).save(word);
+        verify(gameInProgressRepository, times(1)).save(any(GameInProgress.class));
         
     }
 

@@ -1,1 +1,35 @@
-# TODO: Implementar el docker-compose.yml
+version: '3.9'
+
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: demobase-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: demobase
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  demobase-app:
+    build: .
+    container_name: demobase-app
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/demobase?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_SQL_INIT_MODE: always
+
+volumes:
+  mysql_data:
+
